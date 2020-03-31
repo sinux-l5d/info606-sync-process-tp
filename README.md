@@ -1,8 +1,5 @@
 # col3-client-etu
 
-<<<<<<< HEAD
-Squelette du client CoL2
-=======
 Squelette du programme client Clash of L3
 
 # Installation
@@ -11,7 +8,7 @@ Squelette du programme client Clash of L3
 
 Pour cloner le dépôt depuis un terminal
 ```
-git clone https://manouchian.univ-smb.fr/syncproc/col3-srv.git
+git clone https://manouchian.univ-smb.fr/syncproc/col3-client-etu.git
 
 ```
 ## Construction du projet
@@ -34,7 +31,8 @@ make
 
 1. Lancez Anjuta
 1. Cliquez sur 'Import a projet'
-1. Sélectionnez le dossier racine du projet
-1. Sélectionnez le moteur 'Autotools'
-1. Une fois le projet importé, cliquez sur Build
->>>>>>> ajout initial des fichiers du squelette
+1. Cliquez sur 'Import from folder' puis sélectionnez le dossier racine du projet
+1. Cliquez sur 'Import'
+1. Sélectionnez le moteur 'Base Autotools'
+1. Une fois le projet importé, cliquez sur 'Build project' puis 'Execute'
+

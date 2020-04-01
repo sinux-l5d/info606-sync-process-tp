@@ -3,7 +3,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "col3-bib/communCOL3.h"
+#include "col3-bibtp1/communCOL3-TP1.h"
+#include "clientCOL3.h"
 
 /* variables globales */
 
@@ -87,9 +88,17 @@ int main(int argc, char *argv[])
 			testServeur(NOMDUCLAN,ADRESSE,PORT);
 		else
 		{
-			printf("%s", "a completer \n");	
+			recupSiteExtraction();
+			gestionAppro();
 		}
 	}
 		
     return 0;
 }
+
+
+
+
+
+
+

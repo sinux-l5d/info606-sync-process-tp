@@ -4,19 +4,37 @@ Squelette du programme client Clash of L3
 
 # Installation
 
-## clonage du dépôt 
 
-Pour cloner le dépôt depuis un terminal
+## Clonage du dépôt
+
+Le projet utilise un sous-module git [^1] [^2] pour la bibliothèque partagée avec le client (sous dossier col3-bibtp1).  
+Lorsqu'on clone le dépôt git, il faut aussi obtenir la partie qui correspond au sous-module. Cela peut se faire 
+soit en utilisant la commande : 
+```
+git clone --recurse-submodules https://manouchian.univ-smb.fr/syncproc/col3-client-etu.git
+```  
+soit avec un clonage normal, suivit par une initialisation du sous module :
 ```
 git clone https://manouchian.univ-smb.fr/syncproc/col3-client-etu.git
-
+# initialisation sous-module
+git submodule init
+# recuperation de sous-module (commit approprie)
+git submodule update
 ```
+
+
+[^2]: Pro Git book https://git-scm.com/book/fr/v2/Utilitaires-Git-Sous-modules
+[^1]: Documentation Git https://git-scm.com/docs/git-submodule
+
+
+
 ## Construction du projet
 
 ### Pré-requit
 
-la bibliothèque col3-bib a besoin de NCURSE
+la bibliothèque col3-bibtp1 a besoin de NCURSE
 ```
+# installation sous Ubuntu
 sudo apt install libncurses-dev
 ```
 

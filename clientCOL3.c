@@ -50,8 +50,11 @@ int testServeur( const char * adresseip, int port,const char * tokenduclan,const
 	char msgrecu[TAILLE_MAX_MSG];
 	
 
-	printf("%s %s %s","\n *** le clan[",nomduclan,"] crée une socket pour tester le serveur *** \n");
 
+	logClientCOL3(info,"test", 
+					  "le clan[%s] crée une socket pour tester le serveur",
+					  nomduclan);
+	
 	/* -----------------------------
 	   ECHANGE 1 : envoi du token de test 
 	   ----------------------------- */
@@ -80,64 +83,5 @@ int testServeur( const char * adresseip, int port,const char * tokenduclan,const
 
 
 	return socket;
-}
-
-
-
-
-
-
-
-/* ========================================================
-       les fonctions de lecture et d ecriture de la hutte
-          (attention sans mutex .... à modifier )
-   ===================================================*/ 
-
-/** 
- * cette fonction permet d'écrire un fichier de hutte
- * en utilisant la variable globale HUTTECLAN qui est
- * en section critique donc pensez au verrou .....
- *
- */
-void ecritureHutteSansMutex(char path[]) {
-
-  FILE *fichier = NULL;
-  char tmp[TAILLE_MAX];
-
-
-  /* conversion de hutte en texte */ 
-  hutteToMessage(&HUTTECLAN,tmp);
-
-  fichier = fopen(path, "w");
-  if(fichier != NULL){
-     fprintf(fichier, tmp);
-  }
-  fclose(fichier);
-
-}
-
-void lectureFichierHutteSansMutex (hutte * mahutte, char path[]) {
-
-  FILE *fichier;
-  char ligne[40] = "";
-  int i=0;
-
-  if (!NCURSE) printf("%s %s %s", "--> lecture du fichier ",path,"\n");
-
-  fichier = fopen(path, "r");
-  if(fichier != NULL){
-
-     while (fgets(ligne, 40, fichier) != NULL)
-        {
-            if (!NCURSE) printf("%s %d %s %s %s", "lecture fichier hutte ligne",i," = ",ligne,"\n");
-			messageToHutte(ligne, mahutte);
-        }
-
-
-  } else {
-    perror("Fichier hutte abs.");
-    exit(errno);
-  }
-  fclose(fichier);
 }
 

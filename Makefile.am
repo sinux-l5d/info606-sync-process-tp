@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = col3-bibtp1
+SUBDIRS = col3-bibtp
 
 AM_CPPFLAGS = \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\"
@@ -9,7 +9,7 @@ AM_CFLAGS =\
 	-Wall -Wextra\
 	-fdiagnostics-show-option\
 	-g\
-	-pthread -Icol3-bibtp1
+	-pthread -Icol3-bibtp
  
 bin_PROGRAMS = col3_client_etu
 
@@ -21,4 +21,4 @@ col3_client_etu_SOURCES = \
 col3_client_etu_LDADD =  \
 	-lncurses \
 	-lrt \
-	col3-bibtp1/libcol3tp1.a
+	col3-bibtp/libcol3tp.a

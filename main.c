@@ -3,12 +3,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "col3-bibtp1/communCOL3-TP1.h"
+#include "col3-bibtp/communCOL3-TP.h"
 #include "clientCOL3.h"
 
 /* variables globales */
 
-int debug = 0;						// mode debug
+niveau_log NIVEAULOG=none;						// mode debug
 int NCURSE =0;						// affichage avec NCURSE
 
 char  NOMDUCLAN[TAILLE_MAX_NOM_CLAN];  	// nom du clan
@@ -45,8 +45,17 @@ int main(int argc, char *argv[])
 		else if (0 == strcmp("--test",argv[i])){
 			test=1;
         } 
+		else if (0 == strcmp("--full",argv[i])){
+			NIVEAULOG=full;
+        } 
 		else if (0 == strcmp("--debug",argv[i])){
-			debug=1;
+			NIVEAULOG=debug;
+        } 
+		else if (0 == strcmp("--info",argv[i])){
+			NIVEAULOG=info;
+        } 
+		else if (0 == strcmp("--error",argv[i])){
+			NIVEAULOG=error;
         } 
         else if (0 == strcmp("-p",argv[i])){
 			if (argv[i+1]!= NULL) PORT  = (int) strtol(argv[i+1], (char **)NULL, 10);
@@ -54,7 +63,10 @@ int main(int argc, char *argv[])
 		else if (0 == strcmp("-n",argv[i])){
             if (argv[i+1]!= NULL)  strcpy(NOMDUCLAN,argv[i+1]);
         }
-		else if (0 == strcmp("-s",argv[i])){
+		else if (0 == strcmp("-t",argv[i])){
+            if (argv[i+1]!= NULL)  strcpy(MONTOKEN,argv[i+1]);
+		}
+		else if (0 == strcmp("-a",argv[i])){
             if (argv[i+1]!= NULL)  strcpy(ADRESSE ,argv[i+1]);
         }		
         i++;
@@ -65,13 +77,15 @@ int main(int argc, char *argv[])
 	{
 		printf(" Description : pgm client Clash of L3 \n");
 		printf(" Aide : [-h | --help] \n");
-		printf(" Usage : col3-client-etu -p [port] -s [adresseIP] -n [nomduclan]\n");
-		printf("	        	         [--debug] [--test]\n");
-		printf("  -p [port]      : port d'accès du serveur CoL3 (valeur par defaut = 8080) \n");
-		printf("  -s [adresseIP] : adresse IP du serveur CoL3 (valeur par defaut = 127.0.0.1) \n");
-		printf("  -n [nomduclan] : nom du clan (valeur par défaut = TEST \n");
-		printf("  --debug : lance le client en mode debug \n");
-		printf("  --test  : lance le test de connexion avec le serveur CoL3\n\n");
+		printf(" Usage : col3-client-etu -a [adresseIP] -p [port] -n [nomduclan] -t [token]   \n");
+		printf("	        	 [--test]\n");
+		printf("	        	 [--full | --debug | --info | --error] \n");
+		printf("  -p [port] : port d'accès du serveur CLAN (valeur par defaut = 8080) \n");
+		printf("  -a [adresseIP] : adresse IP du serveur  (valeur par defaut = 127.0.0.1) \n");
+		printf("  -n [nomduclan] : nom du clan) \n");
+		printf("  -t [token] : token du clan) \n");
+		printf("  --test  : lance le test de connexion avec le serveur CoL3\n");
+		printf("  --full | --debug | --info | --error : lance le client avec un niveau de log \n\n");
 	}
 	/* sinon je lance la fonction principale */
 	else
@@ -85,7 +99,7 @@ int main(int argc, char *argv[])
 		printf("\n");
 
 		if (test==1)
-			testServeur(NOMDUCLAN,ADRESSE,PORT);
+			testServeur(ADRESSE,PORT,MSG_TEST,NOMDUCLAN);
 		else
 		{
 			recupSiteExtraction();

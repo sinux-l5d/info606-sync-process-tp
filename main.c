@@ -17,7 +17,7 @@ hutte HUTTECLAN;					  	// hutte du clan
 
 int PORT;								// port de connexion au serveur
 int PORTBATAILLE ;						// port de connexion pour la bataille
-char ADRESSE[20];						// adresse IP du serveur
+char ADRESSE[100];						// adresse IP du serveur
 char MONTOKEN[100];						// token unique du clan
 
 /*  programme principal du client CoL3  */

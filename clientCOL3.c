@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <unistd.h>
-#include "col3-bibtp1/communCOL3-TP1.h"
+#include "col3-bibtp/communCOL3-TP.h"
 #include "clientCOL3.h"
 
 

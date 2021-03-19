@@ -1,7 +1,7 @@
 #ifndef CLIENTCOL3_H_INCLUDED
 #define CLIENTCOL3_H_INCLUDED
 
-#include "col3-bibtp1/communCOL3-TP1.h"
+#include "col3-bibtp/communCOL3-TP.h"
 
 
 extern hutte HUTTECLAN;

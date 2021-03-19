@@ -9,9 +9,8 @@ extern hutte HUTTECLAN;
 
 void recupSiteExtraction();
 void gestionAppro();
-int testServeur(const char * nomduclan, const char * adresseip, int port);
+int testServeur( const char * adresseip, int port,const char * tokenduclan,const char * nomduclan);
 
-void ecritureHutteSansMutex(char path[]);
-void lectureFichierHutteSansMutex (hutte * mahutte, char path[]) ;
+
 
 #endif // CLIENTCOL3_H_INCLUDED

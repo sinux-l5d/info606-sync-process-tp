@@ -8,7 +8,7 @@
 
 /* variables globales */
 
-int debug = 0;						// mode debug
+niveau_log NIVEAULOG=none;						// mode debug
 int NCURSE =0;						// affichage avec NCURSE
 
 char  NOMDUCLAN[TAILLE_MAX_NOM_CLAN];  	// nom du clan
@@ -45,8 +45,17 @@ int main(int argc, char *argv[])
 		else if (0 == strcmp("--test",argv[i])){
 			test=1;
         } 
+		else if (0 == strcmp("--full",argv[i])){
+			NIVEAULOG=full;
+        } 
 		else if (0 == strcmp("--debug",argv[i])){
-			debug=1;
+			NIVEAULOG=debug;
+        } 
+		else if (0 == strcmp("--info",argv[i])){
+			NIVEAULOG=info;
+        } 
+		else if (0 == strcmp("--error",argv[i])){
+			NIVEAULOG=error;
         } 
         else if (0 == strcmp("-p",argv[i])){
 			if (argv[i+1]!= NULL) PORT  = (int) strtol(argv[i+1], (char **)NULL, 10);
@@ -85,7 +94,7 @@ int main(int argc, char *argv[])
 		printf("\n");
 
 		if (test==1)
-			testServeur(NOMDUCLAN,ADRESSE,PORT);
+			testServeur(ADRESSE,PORT,MSG_TEST,NOMDUCLAN);
 		else
 		{
 			recupSiteExtraction();

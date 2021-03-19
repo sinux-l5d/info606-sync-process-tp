@@ -45,9 +45,8 @@ void gestionAppro()
 
 int testServeur( const char * adresseip, int port,const char * tokenduclan,const char * nomduclan) {
 	
-	int socket,ret;
+	int socket;
 
-	char msgrecu[TAILLE_MAX_MSG];
 	
 
 

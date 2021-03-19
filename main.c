@@ -77,10 +77,9 @@ int main(int argc, char *argv[])
 	{
 		printf(" Description : pgm client Clash of L3 \n");
 		printf(" Aide : [-h | --help] \n");
-		printf(" Usage : col3-client-etu -a [adresseIP] -p [port]   \n");
-		printf("	        	         -n [nomduclan] -t [token]  \n");
-		printf("	        	         [--test]\n");
-		printf("	        	         [--full | --debug | --info | --error] \n");
+		printf(" Usage : col3-client-etu -a [adresseIP] -p [port] -n [nomduclan] -t [token]   \n");
+		printf("	        	 [--test]\n");
+		printf("	        	 [--full | --debug | --info | --error] \n");
 		printf("  -p [port] : port d'accès du serveur CLAN (valeur par defaut = 8080) \n");
 		printf("  -a [adresseIP] : adresse IP du serveur  (valeur par defaut = 127.0.0.1) \n");
 		printf("  -n [nomduclan] : nom du clan) \n");

@@ -7,7 +7,7 @@ Squelette du programme client Clash of L3
 
 ## Clonage du dépôt
 
-Le projet utilise un sous-module git [^1] [^2] pour la bibliothèque partagée avec le client (sous dossier col3-bibtp1).  
+Le projet utilise un sous-module git [^1] [^2] pour la bibliothèque partagée avec le client (sous dossier col3-bibtp).  
 Lorsqu'on clone le dépôt git, il faut aussi obtenir la partie qui correspond au sous-module. Cela peut se faire 
 soit en utilisant la commande : 
 ```
@@ -30,13 +30,6 @@ git submodule update
 
 ## Construction du projet
 
-### Pré-requit
-
-la bibliothèque col3-bibtp1 a besoin de NCURSE
-```
-# installation sous Ubuntu
-sudo apt install libncurses-dev
-```
 
 ### Construction manuelle
 C'est un projet 'autotools', donc il suffit d'aller dans le dossier projet et d'utiliser les commandes habituelles:

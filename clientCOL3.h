@@ -7,8 +7,10 @@
 extern hutte HUTTECLAN;
 
 
-void recupSiteExtraction();
-void gestionAppro();
+const char *getMatiereName(matieres_premieres mat);
+void afficheRessources(lessitesdumonde nossite);
+void recupSiteExtraction( int socket, lessitesdumonde nossites);
+void gestionAppro( int socket, lessitesdumonde nossites);
 int testServeur( const char * adresseip, int port,const char * tokenduclan,const char * nomduclan);
 
 

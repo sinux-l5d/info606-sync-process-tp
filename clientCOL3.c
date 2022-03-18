@@ -17,11 +17,72 @@
        (a completer)
   ==================================*/
 		   
-void recupSiteExtraction()
+const char *getMatiereName(matieres_premieres mat)
+{
+	switch (mat)
+	{
+	case bois:
+		return "bois";
+	case salpetre:
+		return "salpetre";
+	case charbon:
+		return "charbon";
+	case soufre:
+		return "soufre";
+	case fer:
+		return "fer";
+	case chanvre:
+		return "chanvre";
+	default:
+		return "";
+	}
+}
+
+void afficheRessources(lessitesdumonde nossite)
+{
+	logClientCOL3(info, "afficheRessources", "sites accessibles du clan:");
+	for (int i = 0; i < MAX_SITE_EXTRACTION; i++)
+	{
+		if (nossite[i].idSite == 0) break;
+		logClientCOL3(info, "afficheRessources", " -> id=%d nom=%s lon=%d lat=%d stock=%d matiere=%s duree=%d",
+				nossite[i].idSite,
+				nossite[i].nomSite,
+				nossite[i].longitude,
+				nossite[i].latitude,
+				nossite[i].quantite,
+				getMatiereName(nossite[i].matiere),
+				nossite[i].duree);
+	}
+}
+
+void recupSiteExtraction( int socket, lessitesdumonde nossites)
 {
 
- printf("\n  *** au boulot ... ****\n");
-	
+	int msg_size = strlen(MSG_SITE) + strlen(MSG_DELIMITER) + strlen(MSG_QUEST);
+	char buffer[msg_size];
+	capacite_clan resp;
+
+	if (socket == INVALID_SOCKET) {
+		logClientCOL3(error, "recupSiteExtraction", "Erreur de connexion !");
+		return;
+	}
+
+	sprintf(buffer, "%s%s%s", MSG_SITE, MSG_DELIMITER, MSG_QUEST);
+
+	if(envoiMessageCOL3_s(socket, buffer) != 1) {
+		logClientCOL3(error, "recupSiteExtraction", "Erreur d'envoie de message !");
+	} else {
+		logClientCOL3(info, "recupSiteExtraction", "Connexion réussi !");
+
+		lireStructureCOL3_s(socket, &resp, sizeof resp);
+
+		logClientCOL3(info, "recupSiteExtraction", "id du clan: %d", resp.idClan);
+		logClientCOL3(info, "recupSiteExtraction", "nombre de chariot du clan: %d", resp.nbChariotDisponible);
+		logClientCOL3(info, "recupSiteExtraction", "nom du clan: %s", resp.nomClan);
+		
+		for (int i = 0; i < MAX_SITE_EXTRACTION; i++)
+			nossites[i] = resp.sitesAccessibles[i];
+	}
 }
 
 
@@ -30,11 +91,79 @@ void recupSiteExtraction()
        (a completer)
   ==================================*/
 		   
-void gestionAppro()
+void gestionAppro( int socket, lessitesdumonde nossites)
 {
+	char req[TAILLE_MAX_MSG];
+	char resp[TAILLE_MAX_MSG];
+	char **tab_msg;
+	int site;
 
- printf("\n  *** au boulot ... ****\n");
+	if (socket == INVALID_SOCKET) {
+		logClientCOL3(error, "gestionAppro", "Erreur de connexion !");
+		return;
+	}
+
+	sprintf(req, "%s%s%s", MSG_CHARIOT, MSG_DELIMITER, MSG_QUEST);
+	logClientCOL3(debug, "gestionAppro", "req1: %s", req);
+
+
+	if (envoiMessageCOL3_s(socket, req) == -1) {
+		logClientCOL3(error, "gestionAppro", "Erreur d'envoie de message !");
+		return;
+	}
+
+	if (lireMessageCOL3_s(socket, &resp) == -1) {
+		logClientCOL3(error, "gestionAppro", "Erreur reception message !");
+		return;
+	}
+
+	logClientCOL3(debug, "gestionAppro", "Reponse1: %s", resp);
+
+	if (strcmp(resp, MSG_CHARIOT_OK) == 0)
+	{
+		
+		site = nossites[0].idSite;
+		sprintf(req, "%s%s%d", MSG_CHARIOT, MSG_DELIMITER, site);
+		logClientCOL3(debug, "gestionAppro", "req2: %s", req);
+
+		if(envoiMessageCOL3_s(socket, req) == -1) {
+			logClientCOL3(error, "gestionAppro", "Erreur d'envoie de message !");
+			return;
+		}
+
+		if (lireMessageCOL3_s(socket, resp) == -1) {
+			logClientCOL3(error, "gestionAppro", "Erreur reception message !");
+			return;
+		}
+
+		logClientCOL3(debug, "gestionAppro", "Réponse2: %s", resp);
+
+		tab_msg = split(resp, MSG_DELIMITER, 0);
+		
+		if (strcmp(tab_msg[0], MSG_STOP) == 0)
+		{
+			logClientCOL3(error, "gestionAppro", "MSG_STOP");
+			return;
+		}
+		else if (strcmp(tab_msg[0], MSG_MATIERE) == 0)
+		{
+			logClientCOL3(info, "gestionAppro", "mat=%s qt=%s", getMatiereName( atol(tab_msg[1]) ), tab_msg[3]);
+		}
+		
+	}
+	else if (strcmp(resp, MSG_STOP) == 0)
+	{
+		logClientCOL3(error, "gestionAppro", "MSG_STOP");
+		return;
+	}
+	else
+	{
+		logClientCOL3(error, "gestionAppro", "UNKNOWN ERROR");
+		return;
+	}
 	
+
+	close(socket);
 }
 
 

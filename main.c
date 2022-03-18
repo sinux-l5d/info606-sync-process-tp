@@ -26,11 +26,13 @@ int main(int argc, char *argv[])
 	int i=1 ;
 	int help=0;
 	int test=0;
+	int socket;
+	lessitesdumonde nossites;
 	
 	/* --- cette zone est à modifier à l'issue du jeu --- */
-	strcpy(MONTOKEN,"TEST"); 
-    strcpy(NOMDUCLAN,"TEST");	
-	strcpy(ADRESSE,"127.0.0.1");
+	strcpy(MONTOKEN,"IC:58:NC:2:LS:1-10-12-13-9-2-6-15-7-18-11-19-4-17-5-3"); 
+    strcpy(NOMDUCLAN,"pajux.sinux.sh");	
+	strcpy(ADRESSE,"134.214.147.120");
 	PORT = 8080;
     /* --- cette zone est à modifier à l'issue du jeu --- */
 
@@ -102,10 +104,22 @@ int main(int argc, char *argv[])
 			testServeur(ADRESSE,PORT,MSG_TEST,NOMDUCLAN);
 		else
 		{
-			recupSiteExtraction();
-			gestionAppro();
+			socket = connexionServeurCOL3(ADRESSE,PORT,MONTOKEN,NOMDUCLAN); // on met MSG_TEST à la place du TOKEN
+
+			recupSiteExtraction(socket, nossites);
+
+			close(socket);
+
+			socket = connexionServeurCOL3(ADRESSE,PORT,MONTOKEN,NOMDUCLAN); // on met MSG_TEST à la place du TOKEN
+			afficheRessources(nossites);
+			logClientCOL3(debug, "main", "recupSiteExtraction [OK]");
+
+			gestionAppro(socket, nossites);
+
+			close(socket);
 		}
 	}
+
 		
     return 0;
 }

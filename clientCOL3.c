@@ -54,11 +54,22 @@ void afficheRessources(lessitesdumonde nossite)
 	}
 }
 
+int nbSites(lessitesdumonde nossites)
+{
+	logClientCOL3(info, "nbSites", "nb sites accessibles du clan:");
+	int nb = 0;
+	for (int i = 0; i < MAX_SITE_EXTRACTION; i++)
+	{
+		if (nossites[i].idSite == 0)
+			break;
+		nb++;
+	}
+	return nb;
+}
+
 void recupSiteExtraction(int socket, lessitesdumonde nossites, int *nb_chariots)
 {
-
-	int msg_size = strlen(MSG_SITE) + strlen(MSG_DELIMITER) + strlen(MSG_QUEST);
-	char buffer[msg_size];
+	char buffer[TAILLE_MAX_MSG];
 	capacite_clan resp;
 
 	if (socket == INVALID_SOCKET)
@@ -83,7 +94,7 @@ void recupSiteExtraction(int socket, lessitesdumonde nossites, int *nb_chariots)
 		logClientCOL3(info, "recupSiteExtraction", "nombre de chariot du clan: %d", resp.nbChariotDisponible);
 		*nb_chariots = resp.nbChariotDisponible;
 		logClientCOL3(info, "recupSiteExtraction", "nom du clan: %s", resp.nomClan);
-		afficheCapaciteDuClan(resp);
+		// afficheCapaciteDuClan(resp);
 
 		for (int i = 0; i < MAX_SITE_EXTRACTION; i++)
 			nossites[i] = resp.sitesAccessibles[i];
@@ -106,24 +117,16 @@ void envoieChariots(const char *adresseip, int port, const char *tokenduclan, co
 
 	pthread_t thread[MAX_CHARIOT_PAR_CLAN];
 	params_thread_gestionAppro params[MAX_CHARIOT_PAR_CLAN];
+
 	// pour chaque chariot disponible, on créer un thread
 	for (int i = 0; i < nb_chariots; i++)
 	{
-		params[i].site = nossites[i];
 		params[i].adresseip = adresseip;
 		params[i].port = port;
 		params[i].tokenduclan = tokenduclan;
 		params[i].nomduclan = nomduclan;
 		pthread_create(&thread[i], NULL, gestionAppro, (void *)&params[i]);
-	}
-	// on attend que les threads se terminent
-	for (int i = 0; i < nb_chariots; i++)
-	{
-		if (pthread_join(thread[i], NULL) == -1)
-		{
-			logClientCOL3(error, "envoieChariots", "Erreur de join de thread !");
-			exit(EXIT_FAILURE);
-		}
+		pthread_detach(thread[i]);
 	}
 }
 
@@ -193,6 +196,7 @@ int modifieStock(matieres_premieres matiere, int nb)
 	pthread_mutex_unlock(&mutex_prio_hutte);
 	// TODO: Gerer ajout 1 par 1
 	HUTTECLAN.stock[matiere] += nb;
+	logClientCOL3(info, "modifieStock", "+++ AJOUT DE mat=%s qt=%d", getMatiereName(matiere), nb);
 
 	pthread_mutex_unlock(&mutex_red_hutte);
 	return 1;
@@ -231,40 +235,42 @@ void *gestionAppro(void *params)
 	char req[TAILLE_MAX_MSG];
 	char resp[TAILLE_MAX_MSG];
 	char **tab_msg;
-	int site;
 	int socket;
+	lessitesdumonde nossites;
+	int nb_chariots = 0;
 	params_thread_gestionAppro *donnees = (params_thread_gestionAppro *)params;
-	site = donnees->site.idSite; // site à extraire
+	int site;
+	// site = donnees->site.idSite; // site à extraire
 
+	logClientCOL3(debug, "gestionAppro", "Debut gestionAppro");
+
+	logClientCOL3(debug, "gestionAppro", "ALED1 !");
+	// On récupere les sites depuis le serveur
 	socket = connexionServeurCOL3(donnees->adresseip, donnees->port, donnees->tokenduclan, donnees->nomduclan);
+	recupSiteExtraction(socket, nossites, &nb_chariots);
+	close(socket);
 
-	if (socket == INVALID_SOCKET)
+	while (1)
 	{
-		logClientCOL3(error, "gestionAppro", "Erreur de connexion !");
-		exit(EXIT_FAILURE);
-	}
 
-	sprintf(req, "%s%s%s", MSG_CHARIOT, MSG_DELIMITER, MSG_QUEST);
-	logClientCOL3(debug, "gestionAppro", "req1: %s", req);
+		// On choisi le site que l'on va extraire
+		site = nossites[rand() % nbSites(nossites)].idSite;
 
-	if (envoiMessageCOL3_s(socket, req) == -1)
-	{
-		logClientCOL3(error, "gestionAppro", "Erreur d'envoie de message !");
-		exit(EXIT_FAILURE);
-	}
+		// affiche site choisi
+		logClientCOL3(info, "gestionAppro", "Site choisi : %d", site);
 
-	if (lireMessageCOL3_s(socket, &resp) == -1)
-	{
-		logClientCOL3(error, "gestionAppro", "Erreur reception message !");
-		exit(EXIT_FAILURE);
-	}
+		// On envoie le chariot récuperer la ressource
 
-	logClientCOL3(debug, "gestionAppro", "Reponse1: %s", resp);
+		socket = connexionServeurCOL3(donnees->adresseip, donnees->port, donnees->tokenduclan, donnees->nomduclan);
 
-	if (strcmp(resp, MSG_CHARIOT_OK) == 0)
-	{
-		sprintf(req, "%s%s%d", MSG_CHARIOT, MSG_DELIMITER, site);
-		logClientCOL3(debug, "gestionAppro", "req2: %s", req);
+		if (socket == INVALID_SOCKET)
+		{
+			logClientCOL3(error, "gestionAppro", "Erreur de connexion !");
+			exit(EXIT_FAILURE);
+		}
+
+		sprintf(req, "%s%s%s", MSG_CHARIOT, MSG_DELIMITER, MSG_QUEST);
+		logClientCOL3(debug, "gestionAppro", "req1: %s", req);
 
 		if (envoiMessageCOL3_s(socket, req) == -1)
 		{
@@ -272,53 +278,102 @@ void *gestionAppro(void *params)
 			exit(EXIT_FAILURE);
 		}
 
-		if (lireMessageCOL3_s(socket, resp) == -1)
+		if (lireMessageCOL3_s(socket, &resp) == -1)
 		{
 			logClientCOL3(error, "gestionAppro", "Erreur reception message !");
 			exit(EXIT_FAILURE);
 		}
 
-		logClientCOL3(debug, "gestionAppro", "Réponse2: %s", resp);
+		logClientCOL3(debug, "gestionAppro", "Reponse1: %s", resp);
 
-		tab_msg = split(resp, MSG_DELIMITER, 0);
-
-		if (strcmp(tab_msg[0], MSG_STOP) == 0)
+		if (strcmp(resp, MSG_CHARIOT_OK) == 0)
 		{
-			logClientCOL3(error, "gestionAppro", "Réponse2 : MSG_STOP");
+			sprintf(req, "%s%s%d", MSG_CHARIOT, MSG_DELIMITER, site);
+			logClientCOL3(debug, "gestionAppro", "req2: %s", req);
+
+			if (envoiMessageCOL3_s(socket, req) == -1)
+			{
+				logClientCOL3(error, "gestionAppro", "Erreur d'envoie de message !");
+				exit(EXIT_FAILURE);
+			}
+
+			if (lireMessageCOL3_s(socket, resp) == -1)
+			{
+				logClientCOL3(error, "gestionAppro", "Erreur reception message !");
+				exit(EXIT_FAILURE);
+			}
+
+			logClientCOL3(debug, "gestionAppro", "Réponse2: %s", resp);
+
+			tab_msg = split(resp, MSG_DELIMITER, 0);
+
+			if (strcmp(tab_msg[0], MSG_STOP) == 0)
+			{
+				logClientCOL3(error, "gestionAppro", "Réponse2 : MSG_STOP");
+				exit(EXIT_FAILURE);
+			}
+			else if (strcmp(tab_msg[0], MSG_MATIERE) == 0)
+			{
+				logClientCOL3(info, "gestionAppro", "Chariot bien reçu !");
+				modifieStock(atoi(tab_msg[1]), atoi(tab_msg[3]));
+				saveHutteClan();
+			}
+		}
+		else if (strcmp(resp, MSG_STOP) == 0)
+		{
+			logClientCOL3(error, "gestionAppro", "Réponse1: MSG_STOP");
 			exit(EXIT_FAILURE);
 		}
-		else if (strcmp(tab_msg[0], MSG_MATIERE) == 0)
+		else
 		{
-			logClientCOL3(info, "gestionAppro", "mat=%s qt=%s", getMatiereName(atoi(tab_msg[1])), tab_msg[3]);
-			modifieStock(atoi(tab_msg[1]), atoi(tab_msg[3]));
-			saveHutteClan();
+			logClientCOL3(error, "gestionAppro", "UNKNOWN ERROR");
+			exit(EXIT_FAILURE);
 		}
-	}
-	else if (strcmp(resp, MSG_STOP) == 0)
-	{
-		logClientCOL3(error, "gestionAppro", "Réponse1: MSG_STOP");
-		exit(EXIT_FAILURE);
-	}
-	else
-	{
-		logClientCOL3(error, "gestionAppro", "UNKNOWN ERROR");
-		exit(EXIT_FAILURE);
+
+		close(socket);
+		free(tab_msg);
 	}
 
-	close(socket);
-	free(tab_msg);
 	return NULL;
+}
+
+void monAfficheHutte()
+{
+
+	pthread_mutex_lock(&mutex_prio_hutte);
+	pthread_mutex_lock(&mutex_lect_hutte);
+
+	if (++nbLecteur_huttes == 1)
+		pthread_mutex_lock(&mutex_red_hutte);
+
+	pthread_mutex_unlock(&mutex_lect_hutte);
+	pthread_mutex_unlock(&mutex_prio_hutte);
+
+	afficheHutte(HUTTECLAN);
+
+	pthread_mutex_lock(&mutex_lect_hutte);
+
+	if (--nbLecteur_huttes == 0)
+		pthread_mutex_unlock(&mutex_red_hutte);
+
+	pthread_mutex_unlock(&mutex_lect_hutte);
 }
 
 void *merlin_syncronisateur()
 {
+	int i = 0;
 	// todo : save uniquement si variable inchangé
 	while (1)
 	{
+		sleep(10);
+
 		pthread_mutex_lock(&mutex_lect_hutte);
 		saveHutteClan();
 		pthread_mutex_unlock(&mutex_lect_hutte);
-		sleep(10);
+
+		// On affiche toute les 20 secondes la hutte
+		if ((i = !i))
+			monAfficheHutte();
 	}
 }
 
@@ -327,15 +382,8 @@ void *pretresse(void *param)
 	params_thread_pretresse *donnees = (params_thread_pretresse *)param;
 	char req[TAILLE_MAX_MSG];
 	char resp[TAILLE_MAX_MSG];
+	int socket;
 	const char *func_name = donnees->MSG_QUEST == MSG_QUEST_FEU ? "pretresse (feu)" : "pretresse (guerre)";
-
-	int socket = connexionServeurCOL3(donnees->adresseip, donnees->port, donnees->tokenduclan, donnees->nomduclan);
-
-	if (socket == INVALID_SOCKET)
-	{
-		logClientCOL3(error, func_name, "Erreur de connexion !");
-		exit(EXIT_FAILURE);
-	}
 
 	sprintf(req, "%s%s%s", MSG_HUTTE, MSG_DELIMITER, donnees->MSG_QUEST);
 
@@ -344,6 +392,14 @@ void *pretresse(void *param)
 	while (1)
 	{
 		sleep(5);
+
+		socket = connexionServeurCOL3(donnees->adresseip, donnees->port, donnees->tokenduclan, donnees->nomduclan);
+
+		if (socket == INVALID_SOCKET)
+		{
+			logClientCOL3(error, func_name, "Erreur de connexion !");
+			exit(EXIT_FAILURE);
+		}
 
 		if (envoiMessageCOL3_s(socket, req) == -1)
 		{
@@ -364,7 +420,7 @@ void *pretresse(void *param)
 		}
 		else if (strcmp(resp, MSG_HUTTE_OK) == 0)
 		{
-			logClientCOL3(info, func_name, "Réponse1: MSG_HUTTE_OK");
+			logClientCOL3(debug, func_name, "Réponse1: MSG_HUTTE_OK");
 		}
 		else
 		{
@@ -423,6 +479,15 @@ void *pretresse(void *param)
 
 	return NULL;
 }
+
+// void demarreForges()
+// {
+// 	pthread_t threadForgeBLE[MAX_FORGE_BLE];
+// 	pthread_t threadForgeBLO[MAX_FORGE_BLO];
+
+// 	for (int i = 0; i < MAX_FORGE_BLE; i++)
+// 	pthread_create(&threadForgeBLE[i], NULL, forgerBLE, NULL);
+// }
 
 /*  ======================================
 	  fonction de test d'échange initiale

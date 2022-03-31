@@ -19,7 +19,6 @@ typedef struct
     int port;
     const char *tokenduclan;
     const char *nomduclan;
-    site_extraction site;
 
 } params_thread_gestionAppro;
 
@@ -51,5 +50,7 @@ void *gestionAppro(void *params);
 void *merlin_syncronisateur();
 void *pretresse(void *param);
 int testServeur(const char *adresseip, int port, const char *tokenduclan, const char *nomduclan);
+int nbSites(lessitesdumonde nossites);
+void demarreForges();
 
 #endif // CLIENTCOL3_H_INCLUDED

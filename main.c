@@ -32,6 +32,7 @@ pthread_t thread_pretresse_feu;
 pthread_t thread_pretresse_guerre;
 params_thread_pretresse feu;
 params_thread_pretresse guerre;
+char wait;
 
 /*  programme principal du client CoL3  */
 int main(int argc, char *argv[])
@@ -157,25 +158,18 @@ int main(int argc, char *argv[])
 			guerre.nomduclan = NOMDUCLAN;
 			guerre.MSG_QUEST = MSG_QUEST_GUERRE;
 
-			logClientCOL3(debug, "main", "Creation thread pretresse feu !");
 			pthread_create(&thread_pretresse_feu, NULL, pretresse, (void *)&feu);
-			// pthread_detach(thread_pretresse_feu);
+			pthread_detach(thread_pretresse_feu);
+
 			pthread_create(&thread_pretresse_guerre, NULL, pretresse, (void *)&guerre);
-			// pthread_detach(thread_pretresse_guerre);
-
-			pthread_join(thread_pretresse_feu, NULL);
-			pthread_join(thread_pretresse_guerre, NULL);
-
-			/*
-			int nb_char;
-			lessitesdumonde ns;
-			int socket = connexionServeurCOL3(ADRESSE, PORT, MONTOKEN, NOMDUCLAN);
-			recupSiteExtraction(socket, ns, &nb_char);
+			pthread_detach(thread_pretresse_guerre);
 
 			envoieChariots(ADRESSE, PORT, MONTOKEN, NOMDUCLAN);
+			// demarreForges();
+
+			scanf("%c", &wait);
 
 			afficheHutte(HUTTECLAN);
-			*/
 		}
 
 		pthread_mutex_destroy(&mutex_lect_hutte);

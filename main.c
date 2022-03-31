@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 			pthread_detach(thread_pretresse_guerre);
 
 			envoieChariots(ADRESSE, PORT, MONTOKEN, NOMDUCLAN);
-			// demarreForges();
+			demarreForges();
 
 			scanf("%c", &wait);
 

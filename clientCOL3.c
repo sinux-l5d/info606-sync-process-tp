@@ -480,14 +480,58 @@ void *pretresse(void *param)
 	return NULL;
 }
 
-// void demarreForges()
-// {
-// 	pthread_t threadForgeBLE[MAX_FORGE_BLE];
-// 	pthread_t threadForgeBLO[MAX_FORGE_BLO];
+void demarreForges()
+{
+	pthread_t threadForgeBLE[MAX_FORGE_BLE];
+	pthread_t threadForgeBLO[MAX_FORGE_BLO];
 
-// 	for (int i = 0; i < MAX_FORGE_BLE; i++)
-// 	pthread_create(&threadForgeBLE[i], NULL, forgerBLE, NULL);
-// }
+	for (int i = 0; i < MAX_FORGE_BLE; i++)
+	{
+		pthread_create(&threadForgeBLE[i], NULL, forgerBLE, NULL);
+		pthread_detach(threadForgeBLE[i]);
+	}
+
+	// for (int i = 0; i < MAX_FORGE_BLO; i++)
+	// {
+	// 	pthread_create(&threadForgeBLO[i], NULL, forgerBLO, NULL);
+	// 	pthread_detach(threadForgeBLO[i]);
+	// }
+}
+
+void forgerBLE()
+{
+
+	while (1)
+	{
+		if (stockOkPourBLE())
+		{
+			// Fabrication de la baliste légere
+			utiliseRessourcesPourBLE();
+			//
+			sleep(TPS_FAB_BLE);
+		}
+	}
+}
+
+int stockOkPourBLE()
+{
+	return lisStock(bois) >= MATERIAUX_BALISTE[(int)BLE][bois] &&
+		   lisStock(salpetre) >= MATERIAUX_BALISTE[(int)BLE][salpetre] &&
+		   lisStock(charbon) >= MATERIAUX_BALISTE[(int)BLE][charbon] &&
+		   lisStock(soufre) >= MATERIAUX_BALISTE[(int)BLE][soufre] &&
+		   lisStock(fer) >= MATERIAUX_BALISTE[(int)BLE][fer] &&
+		   lisStock(chanvre) >= MATERIAUX_BALISTE[(int)BLE][chanvre];
+}
+
+void utiliseRessourcesPourBLE()
+{
+	modifieStock(bois, -MATERIAUX_BALISTE[(int)BLE][bois]);
+	modifieStock(salpetre, -MATERIAUX_BALISTE[(int)BLE][salpetre]);
+	modifieStock(charbon, -MATERIAUX_BALISTE[(int)BLE][charbon]);
+	modifieStock(soufre, -MATERIAUX_BALISTE[(int)BLE][soufre]);
+	modifieStock(fer, -MATERIAUX_BALISTE[(int)BLE][fer]);
+	modifieStock(chanvre, -MATERIAUX_BALISTE[(int)BLE][chanvre]);
+}
 
 /*  ======================================
 	  fonction de test d'échange initiale

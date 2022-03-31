@@ -52,5 +52,8 @@ void *pretresse(void *param);
 int testServeur(const char *adresseip, int port, const char *tokenduclan, const char *nomduclan);
 int nbSites(lessitesdumonde nossites);
 void demarreForges();
+void forgerBLE();
+int stockOkPourBLE();
+void utiliseRessourcesPourBLE();
 
 #endif // CLIENTCOL3_H_INCLUDED

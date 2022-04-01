@@ -33,6 +33,8 @@ pthread_t thread_pretresse_guerre;
 params_thread_pretresse feu;
 params_thread_pretresse guerre;
 char wait;
+int nb_chariots;
+lessitesdumonde nossites;
 
 /*  programme principal du client CoL3  */
 int main(int argc, char *argv[])
@@ -141,6 +143,8 @@ int main(int argc, char *argv[])
 			testServeur(ADRESSE, PORT, MSG_TEST, NOMDUCLAN);
 		else
 		{
+			// Affiche les sites d'extraction
+			recupSiteExtraction(connexionServeurCOL3(ADRESSE, PORT, MONTOKEN, NOMDUCLAN), nossites, &nb_chariots, 1);
 
 			// Invoque Merlin, la pretresse de feu et la pretresse de la guerre
 			pthread_create(&thread_merlin, NULL, merlin_syncronisateur, NULL);

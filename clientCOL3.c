@@ -56,7 +56,6 @@ void afficheRessources(lessitesdumonde nossite)
 
 int nbSites(lessitesdumonde nossites)
 {
-	logClientCOL3(info, "nbSites", "nb sites accessibles du clan:");
 	int nb = 0;
 	for (int i = 0; i < MAX_SITE_EXTRACTION; i++)
 	{
@@ -67,7 +66,7 @@ int nbSites(lessitesdumonde nossites)
 	return nb;
 }
 
-void recupSiteExtraction(int socket, lessitesdumonde nossites, int *nb_chariots)
+void recupSiteExtraction(int socket, lessitesdumonde nossites, int *nb_chariots, int afficherClan)
 {
 	char buffer[TAILLE_MAX_MSG];
 	capacite_clan resp;
@@ -86,15 +85,14 @@ void recupSiteExtraction(int socket, lessitesdumonde nossites, int *nb_chariots)
 	}
 	else
 	{
-		logClientCOL3(info, "recupSiteExtraction", "Connexion réussi !");
+		logClientCOL3(debug, "recupSiteExtraction", "Connexion réussi !");
 
 		lireStructureCOL3_s(socket, &resp, sizeof resp);
 
-		logClientCOL3(info, "recupSiteExtraction", "id du clan: %d", resp.idClan);
-		logClientCOL3(info, "recupSiteExtraction", "nombre de chariot du clan: %d", resp.nbChariotDisponible);
 		*nb_chariots = resp.nbChariotDisponible;
-		logClientCOL3(info, "recupSiteExtraction", "nom du clan: %s", resp.nomClan);
-		// afficheCapaciteDuClan(resp);
+
+		if (afficherClan)
+			afficheCapaciteDuClan(resp);
 
 		for (int i = 0; i < MAX_SITE_EXTRACTION; i++)
 			nossites[i] = resp.sitesAccessibles[i];
@@ -112,7 +110,7 @@ void envoieChariots(const char *adresseip, int port, const char *tokenduclan, co
 	lessitesdumonde nossites;
 	int nb_chariots = 0;
 
-	recupSiteExtraction(socket, nossites, &nb_chariots);
+	recupSiteExtraction(socket, nossites, &nb_chariots, 0);
 	close(socket);
 
 	pthread_t thread[MAX_CHARIOT_PAR_CLAN];
@@ -194,9 +192,18 @@ int modifieStock(matieres_premieres matiere, int nb)
 	pthread_mutex_lock(&mutex_prio_hutte);
 	pthread_mutex_lock(&mutex_red_hutte);
 	pthread_mutex_unlock(&mutex_prio_hutte);
-	// TODO: Gerer ajout 1 par 1
-	HUTTECLAN.stock[matiere] += nb;
-	logClientCOL3(info, "modifieStock", "+++ AJOUT DE mat=%s qt=%d", getMatiereName(matiere), nb);
+	while (estQuantiteValide(matiere, nb < 0 ? -1 : 1) && nb != 0)
+	{
+		HUTTECLAN.stock[matiere] += nb < 0 ? -1 : 1;
+		if (nb < 0)
+		{
+			nb++;
+		}
+		else
+		{
+			nb++;
+		}
+	}
 
 	pthread_mutex_unlock(&mutex_red_hutte);
 	return 1;
@@ -240,21 +247,20 @@ void *gestionAppro(void *params)
 	int nb_chariots = 0;
 	params_thread_gestionAppro *donnees = (params_thread_gestionAppro *)params;
 	int site;
-	// site = donnees->site.idSite; // site à extraire
+	int aleat;
 
-	logClientCOL3(debug, "gestionAppro", "Debut gestionAppro");
-
-	logClientCOL3(debug, "gestionAppro", "ALED1 !");
 	// On récupere les sites depuis le serveur
 	socket = connexionServeurCOL3(donnees->adresseip, donnees->port, donnees->tokenduclan, donnees->nomduclan);
-	recupSiteExtraction(socket, nossites, &nb_chariots);
+	recupSiteExtraction(socket, nossites, &nb_chariots, 0);
 	close(socket);
 
 	while (1)
 	{
 
 		// On choisi le site que l'on va extraire
-		site = nossites[rand() % nbSites(nossites)].idSite;
+		// aleat = rand() % nbSites(nossites);
+		// site = nossites[aleat].idSite;
+		site = 9;
 
 		// affiche site choisi
 		logClientCOL3(info, "gestionAppro", "Site choisi : %d", site);
@@ -290,6 +296,8 @@ void *gestionAppro(void *params)
 		{
 			sprintf(req, "%s%s%d", MSG_CHARIOT, MSG_DELIMITER, site);
 			logClientCOL3(debug, "gestionAppro", "req2: %s", req);
+			logClientCOL3(info, "gestionAppro", "Envoi d'un chariot vers le site %s(%d)", nossites[aleat].nomSite, site);
+			logClientCOL3(info, "gestionAppro", "Le trajet va durer %ds", nossites[aleat].duree);
 
 			if (envoiMessageCOL3_s(socket, req) == -1)
 			{
@@ -314,7 +322,7 @@ void *gestionAppro(void *params)
 			}
 			else if (strcmp(tab_msg[0], MSG_MATIERE) == 0)
 			{
-				logClientCOL3(info, "gestionAppro", "Chariot bien reçu !");
+				logClientCOL3(info, "gestionAppro", "Un chariot avec %dkg de %s est arrivé !)", atoi(tab_msg[3]), getMatiereName(atoi(tab_msg[1])));
 				modifieStock(atoi(tab_msg[1]), atoi(tab_msg[3]));
 				saveHutteClan();
 			}
@@ -507,8 +515,8 @@ void forgerBLE()
 		{
 			// Fabrication de la baliste légere
 			utiliseRessourcesPourBLE();
-			//
 			sleep(TPS_FAB_BLE);
+			logClientCOL3(info, "forgerBLE", "Baliste légere forgé !");
 		}
 	}
 }

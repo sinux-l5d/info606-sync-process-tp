@@ -38,7 +38,7 @@ extern params_thread_pretresse guerre;
 
 const char *getMatiereName(matieres_premieres mat);
 void afficheRessources(lessitesdumonde nossite);
-void recupSiteExtraction(int socket, lessitesdumonde nossites, int *nb_chariots);
+void recupSiteExtraction(int socket, lessitesdumonde nossites, int *nb_chariots, int afficherClan);
 void envoieChariots(const char *adresseip, int port, const char *tokenduclan, const char *nomduclan);
 void loadHutteClan();
 void saveHutteClan();

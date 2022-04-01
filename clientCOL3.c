@@ -258,9 +258,8 @@ void *gestionAppro(void *params)
 	{
 
 		// On choisi le site que l'on va extraire
-		// aleat = rand() % nbSites(nossites);
-		// site = nossites[aleat].idSite;
-		site = 9;
+		aleat = rand() % nbSites(nossites);
+		site = nossites[aleat].idSite;
 
 		// affiche site choisi
 		logClientCOL3(info, "gestionAppro", "Site choisi : %d", site);
@@ -492,10 +491,14 @@ void demarreForges()
 {
 	pthread_t threadForgeBLE[MAX_FORGE_BLE];
 	pthread_t threadForgeBLO[MAX_FORGE_BLO];
+	// params_thread_forger params;
+	int numero_forge;
 
 	for (int i = 0; i < MAX_FORGE_BLE; i++)
 	{
-		pthread_create(&threadForgeBLE[i], NULL, forgerBLE, NULL);
+		// params.numero_forge = i + 1;
+		numero_forge = i + 1;
+		pthread_create(&threadForgeBLE[i], NULL, forgerBLE, (void *)&numero_forge);
 		pthread_detach(threadForgeBLE[i]);
 	}
 
@@ -506,17 +509,47 @@ void demarreForges()
 	// }
 }
 
-void forgerBLE()
+void *forgerBLE(void *param)
 {
+
+	int *numero_forge = (int *)param;
+	char str_date_debut[24];
+	char str_date_fin[24];
+	time_t timestamp;
+	struct tm *pTime;
 
 	while (1)
 	{
+
 		if (stockOkPourBLE())
 		{
 			// Fabrication de la baliste légere
 			utiliseRessourcesPourBLE();
+
+			// bloque le tempon
+			pthread_mutex_lock(&mutex_tampon);
+			// Attent si le tempon est plein (0 place libre)
+			sem_wait(&sem_vide);
+			// La nouvelle baliste prend une place dans le tampon
+			sem_post(&sem_plein);
+
+			timestamp = time(NULL);
+			pTime = localtime(&timestamp);
+			strftime(str_date_debut, 24, "%Y-%m-%d_%H-%M-%S", pTime);
+			// TODO: Pour le temps ya pas les ms -> https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c
+
 			sleep(TPS_FAB_BLE);
+
+			timestamp = time(NULL);
+			pTime = localtime(&timestamp);
+			strftime(str_date_fin, 24, "%Y-%m-%d_%H-%M-%S", pTime);
+
 			logClientCOL3(info, "forgerBLE", "Baliste légere forgé !");
+			// TODO: Stocker dans un tampon -> tampon = fichier ? sinon comment stocker les deux type de balise
+			saveBLE(*numero_forge, str_date_debut, str_date_fin);
+
+			sem_post(&sem_vide);
+			pthread_mutex_unlock(&mutex_tampon);
 		}
 	}
 }
@@ -540,6 +573,26 @@ void utiliseRessourcesPourBLE()
 	modifieStock(fer, -MATERIAUX_BALISTE[(int)BLE][fer]);
 	modifieStock(chanvre, -MATERIAUX_BALISTE[(int)BLE][chanvre]);
 }
+
+void saveBLE(int numero_forge, char str_date_debut[24], char str_date_fin[24])
+{
+	FILE *fichier = NULL;
+	int numero_baliste;
+	sem_getvalue(&sem_plein, &numero_baliste);
+
+	fichier = fopen("tampon.txt", "a");
+	if (fichier != NULL)
+	{
+		fprintf(fichier, "%d:%d:%s:%s:%s\n", numero_baliste, numero_forge, "BLE", str_date_debut, str_date_fin);
+		fclose(fichier);
+	}
+	else
+	{
+		logClientCOL3(error, "saveBLE", "Erreur d'enregistrement de la baliste legère");
+	}
+}
+
+// TODO: Faire les BLO
 
 /*  ======================================
 	  fonction de test d'échange initiale

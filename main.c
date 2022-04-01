@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <unistd.h>
 #include "col3-bibtp/communCOL3-TP.h"
 #include "clientCOL3.h"
@@ -36,6 +37,10 @@ char wait;
 int nb_chariots;
 lessitesdumonde nossites;
 
+sem_t sem_plein;			  // sem qui compte le nombre de place occupe dans le tampon
+sem_t sem_vide;				  // sem qui compte le nombre de place libre dans le tampon
+pthread_mutex_t mutex_tampon; // mutex qui limite l'access au tampon
+
 /*  programme principal du client CoL3  */
 int main(int argc, char *argv[])
 {
@@ -43,9 +48,15 @@ int main(int argc, char *argv[])
 	int help = 0;
 	int test = 0;
 
+	// init mutex Lecteur/Redacteur
 	pthread_mutex_init(&mutex_lect_hutte, NULL);
 	pthread_mutex_init(&mutex_red_hutte, NULL);
 	pthread_mutex_init(&mutex_prio_hutte, NULL);
+
+	// init mutex et semaphore producteur/consomateur
+	sem_init(&sem_vide, 0, TAILLE_MAX_ARMEE);
+	sem_init(&sem_plein, 0, 0);
+	pthread_mutex_init(&mutex_tampon, NULL);
 
 	/* --- cette zone est à modifier à l'issue du jeu --- */
 	strcpy(MONTOKEN, "IC:58:NC:2:LS:1-10-12-13-9-2-6-15-7-18-11-19-4-17-5-3");
